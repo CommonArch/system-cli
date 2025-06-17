@@ -23,12 +23,12 @@ def main():
 
 def install_packages(new_rootfs, packages):
     if os.path.isfile(os.path.join(new_rootfs, 'usr/bin/pacman')):
-        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'pacman-key', '--init'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'pacman-key', '--populate'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'pacman', '-Sy', '--ask=4', *(system_config.get('packages'))])
+        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'pacman-key', '--init'])
+        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'pacman-key', '--populate'])
+        return subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'pacman', '-Sy', '--ask=4', *packages])
     elif os.path.isfile(os.path.join(new_rootfs, 'usr/bin/apt-get')):
-        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'apt-get', 'update'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return subprocess.run(['systemd-nspawn', '-D', new_rootfs, '--setenv=DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-y', *(system_config.get('packages'))])
+        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'apt-get', 'update'])
+        return subprocess.run(['systemd-nspawn', '-D', new_rootfs, '--setenv=DEBIAN_FRONTEND=noninteractive', 'apt-get', 'install', '-y', *packages])
 
 
 @cli.command("update-check", hidden=True)
@@ -94,14 +94,14 @@ def rebase(image_name, updating=False):
         print('e: must be run as root', file=sys.stderr)
         exit(100)
 
-    subprocess.run(['mkdir', '-p', '/var/lib/commonarch'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(['mkdir', '-p', '/var/lib/commonarch'])
     system_lock = fasteners.InterProcessLock('/var/lib/commonarch/.system-lock')
     print('i: attempting to acquire system lock')
 
     with system_lock:
         subprocess.run(['rm', '-rf', '/var/lib/commonarch/bundle',
                            '/var/lib/commonarch/system-image', '/.update',
-                           '/.update_rootfs', '/.new.etc', '/.new.var.lib'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                           '/.update_rootfs', '/.new.etc', '/.new.var.lib'])
 
         if updating:
             print(f'i: updating system (using image {image_name})')
@@ -172,10 +172,10 @@ def rebase(image_name, updating=False):
         for kernel in os.listdir(f'{new_rootfs}/usr/lib/modules'):
             subprocess.run(['cp', f'{new_rootfs}/usr/lib/modules/{kernel}/vmlinuz', f'{new_rootfs}/boot/vmlinuz-{kernel}'])
 
-        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'dracut', '--force', '--regenerate-all'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'dracut', '--force', '--regenerate-all'])
 
         shutil.copy2('/etc/locale.gen', f'{new_rootfs}/etc/locale.gen')
-        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'locale-gen'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'locale-gen'])
 
         subprocess.run(['cp', '-ax', f'{new_rootfs}/etc', '/.new.etc'])
 
@@ -313,14 +313,14 @@ def rebase(image_name, updating=False):
             print('e: malformed /etc/gshadow')
             exit(1)
 
-        subprocess.run(['cp', '-ax', '/var/lib', '/.new.var.lib'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(['cp', '-ax', '/var/lib', '/.new.var.lib'])
 
         var_lib_diff = filecmp.dircmp(f'{new_rootfs}/var/lib/', '/.new.var.lib/')
 
         dir_name = '/.new.var.lib/'
         for name in var_lib_diff.left_only:
             if os.path.isdir(os.path.join(var_lib_diff.left, name)):
-                subprocess.run(['cp', '-ax', os.path.join(var_lib_diff.left, name), dir_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(['cp', '-ax', os.path.join(var_lib_diff.left, name), dir_name])
 
         if type(system_config.get('packages')) == list:
             install_packages(new_rootfs, system_config['packages'])
@@ -335,21 +335,21 @@ def rebase(image_name, updating=False):
                 if type(user_service) is str:
                     subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'systemctl', 'enable', '--global', user_service])
 
-        subprocess.run(['mkdir', '-p', f'/.new.var.lib/commonarch'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(['mkdir', '-p', f'/.new.var.lib/commonarch'])
         with open(f'/.new.var.lib/commonarch/revision', 'w') as new_revision_file:
             try:
                 new_revision_file.write(new_revision)
             except Exception:
                 pass
 
-        subprocess.run(['cp', '-ax', f'{new_rootfs}/etc', f'{new_rootfs}/usr/etc'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(['cp', '-ax', new_rootfs, '/.update_rootfs'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(['cp', '-ax', f'{new_rootfs}/etc', f'{new_rootfs}/usr/etc'])
+        subprocess.run(['cp', '-ax', new_rootfs, '/.update_rootfs'])
 
         new_boot_files = []
 
         for f in os.listdir('/.update_rootfs/boot'):
             if not os.path.isdir(f'/.update_rootfs/boot/{f}'):
-                subprocess.run(['mv', f'/.update_rootfs/boot/{f}', '/boot'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.run(['mv', f'/.update_rootfs/boot/{f}', '/boot'])
                 new_boot_files.append(f)
 
         for f in os.listdir('/boot'):
