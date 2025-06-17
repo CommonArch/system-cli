@@ -169,7 +169,10 @@ def rebase(image_name, updating=False):
 
         new_rootfs = f'/var/lib/commonarch/bundle/{image_config["root"]["path"]}'
 
-        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'dracut'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for kernel in os.listdir(f'{new_rootfs}/usr/lib/modules'):
+            subprocess.run(['cp', f'{new_rootfs}/usr/lib/modules/{kernel}/vmlinuz', f'{new_rootfs}/boot/vmlinuz-{kernel}'])
+
+        subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'dracut', '--force', '--regenerate-all'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         shutil.copy2('/etc/locale.gen', f'{new_rootfs}/etc/locale.gen')
         subprocess.run(['systemd-nspawn', '-D', new_rootfs, 'locale-gen'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
