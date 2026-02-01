@@ -169,6 +169,10 @@ def rebase(image_name, updating=False):
 
         new_rootfs = f'/var/lib/commonarch/bundle/{image_config["root"]["path"]}'
 
+        for boot_file in os.listdir(f'{new_rootfs}/boot'):
+            if not os.path.isdir(boot_file):
+                subprocess.run(['rm', '-f', f'{new_rootfs}/boot/{boot_file}'])
+
         for kernel in os.listdir(f'{new_rootfs}/usr/lib/modules'):
             subprocess.run(['cp', f'{new_rootfs}/usr/lib/modules/{kernel}/vmlinuz', f'{new_rootfs}/boot/vmlinuz-{kernel}'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
