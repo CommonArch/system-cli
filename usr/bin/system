@@ -33,6 +33,9 @@ def install_packages(new_rootfs, packages):
 
 @cli.command("update-check", hidden=True)
 def update_check_daemon():
+    if os.environ.get('USER') == 'gdm-greeter':
+        exit()
+
     while True:
         try:
             if not os.path.isdir('/.update_rootfs'):
