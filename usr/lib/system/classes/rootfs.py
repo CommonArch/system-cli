@@ -105,14 +105,12 @@ class PackageManager:
             self.rootfs.exec("pacman", "-Sy", "--ask=4", *pkgs)
         elif self.pkg_manager == "apt":
             return self.rootfs.exec(
-                [
-                    "env",
-                    "DEBIAN_FRONTEND=noninteractive",
-                    "apt-get",
-                    "install",
-                    "-yq",
-                    *pkgs,
-                ]
+                "env",
+                "DEBIAN_FRONTEND=noninteractive",
+                "apt-get",
+                "install",
+                "-yq",
+                *pkgs,
             )
 
     @staticmethod

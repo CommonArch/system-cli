@@ -161,7 +161,7 @@ def rebase(image_name) -> None:
     merge_var_lib(new_rootfs)
 
     if isinstance((packages := system_config.get("packages")), list):
-        PackageManager(new_rootfs).install(packages)
+        PackageManager(new_rootfs).install(*packages)
 
     if isinstance((services := system_config.get("services")), list):
         for service in services:
