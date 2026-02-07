@@ -126,9 +126,9 @@ class PackageManager:
             The type of package manager found.
         """
 
-        if os.path.isfile(os.path.join(rootfs, "usr/bin/pacman")):
+        if os.path.isfile(os.path.join(str(rootfs), "usr/bin/pacman")):
             return "pacman"
-        elif os.path.isfile(os.path.join(rootfs, "usr/bin/apt-get")):
+        elif os.path.isfile(os.path.join(str(rootfs), "usr/bin/apt-get")):
             return "apt"
         else:
             return "none"
