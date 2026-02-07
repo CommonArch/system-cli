@@ -178,10 +178,9 @@ def rebase(image_name) -> None:
         except Exception:
             pass
 
-    new_rootfs.exec("/etc", "/usr/etc")
+    new_rootfs.exec("cp", "-ax", "/etc", "/usr/etc")
     subprocess.run(["cp", "-ax", str(new_rootfs), "/.update_rootfs"])
 
     replace_boot_files()
 
     print()
-    output.info("rebase complete; you may now reboot.")
