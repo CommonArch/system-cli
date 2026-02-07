@@ -66,7 +66,7 @@ def update_check_daemon():
 
 @cli.command("update")
 @click.option("-f", "--force", is_flag=True)
-def upgrade_cmd(force):
+def update_cmd(force):
     """
     Update your system to the latest available image.
     """
@@ -79,20 +79,23 @@ def upgrade_cmd(force):
     output.info("attempting to acquire system lock")
     output.info("if stuck for long, an update may be progressing in the background")
 
-    if not os.path.isdir("/.update_rootfs") and not force:
-        system_config = helpers.get_system_config()
-
-        if helpers.is_already_latest(system_config["image"]):
-            output.error("your system is already up-to-date")
-            sys.exit(1)
-    else:
-        output.error(
-            "an update has already been downloaded and is waiting to be applied"
-        )
-        output.error("you must reboot before running this command")
-        sys.exit(1)
-
     with system_lock:
+        print()
+        output.info("checking if already up-to-date...")
+
+        if not os.path.isdir("/.update_rootfs") or force:
+            system_config = helpers.get_system_config()
+
+            if helpers.is_already_latest(system_config["image"]):
+                output.info("your system is already up-to-date")
+                sys.exit(0)
+        else:
+            output.error(
+                "an update has already been downloaded and is waiting to be applied"
+            )
+            output.error("you must reboot before running this command")
+            sys.exit(1)
+
         rebase(system_config["image"])
         output.info("update complete; you may now reboot.")
 
@@ -113,20 +116,23 @@ def rebase_cmd(image_name, force):
     output.info("attempting to acquire system lock")
     output.info("if stuck for long, an update may be progressing in the background")
 
-    if not os.path.isdir("/.update_rootfs") and not force:
-        if helpers.is_already_latest(image_name):
-            output.error(
-                "your system is already on the latest revision of the specified image"
-            )
-            sys.exit(1)
-    else:
-        output.error(
-            "an update has already been downloaded and is waiting to be applied"
-        )
-        output.error("you must reboot before running this command")
-        sys.exit(1)
-
     with system_lock:
+        print()
+        output.info("checking if already up-to-date...")
+
+        if not os.path.isdir("/.update_rootfs") or force:
+            if helpers.is_already_latest(image_name):
+                output.info(
+                    "your system is already on the latest revision of the specified image"
+                )
+                sys.exit(0)
+        else:
+            output.error(
+                "an update has already been downloaded and is waiting to be applied"
+            )
+            output.error("you must reboot before running this command")
+            sys.exit(1)
+
         rebase(image_name)
         output.info("update complete; you may now reboot.")
 

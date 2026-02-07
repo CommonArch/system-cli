@@ -41,28 +41,48 @@ def fetch_image_metadata(image_name: str) -> dict:
 
 def pull_image(image_name) -> None:
     """Pull the provided image locally."""
-    if (
-        subprocess.run(
-            [
-                "skopeo",
-                "copy",
-                image_name,
-                "--dest-shared-blob-dir=/var/lib/commonarch/blobs",
-                "oci:/var/lib/commonarch/system-image:main",
-            ]
-        ).returncode
-        != 0
-    ) and (
-        subprocess.run(
-            [
-                "umoci",
-                "unpack",
-                "--image",
-                "/var/lib/commonarch/system-image:main",
-                "/var/lib/commonarch/bundle",
-            ]
-        ).returncode
-        != 0
+    if not (
+        (
+            subprocess.run(
+                [
+                    "skopeo",
+                    "copy",
+                    image_name,
+                    "--dest-shared-blob-dir=/var/lib/commonarch/blobs",
+                    "oci:/var/lib/commonarch/system-image:main",
+                ]
+            ).returncode
+            == 0
+        )
+        and (
+            subprocess.run(
+                ["rm", "-rf", "/var/lib/commonarch/system-image/blobs"]
+            ).returncode
+            == 0
+        )
+        and (
+            subprocess.run(
+                [
+                    "ln",
+                    "-s",
+                    "/var/lib/commonarch/blobs",
+                    "/var/lib/commonarch/system-image/blobs",
+                ]
+            ).returncode
+            == 0
+        )
+        and (
+            subprocess.run(
+                [
+                    "umoci",
+                    "unpack",
+                    "--image",
+                    "/var/lib/commonarch/system-image:main",
+                    "/var/lib/commonarch/bundle",
+                ]
+            ).returncode
+            == 0
+        )
     ):
         raise exceptions.ImageMetadataException()
 
