@@ -41,11 +41,20 @@ class RootFS:
 
     def copy_kernels_to_boot(self) -> None:
         """Copy any found kernels to /boot within rootfs."""
+        kernels = [
+            kernel
+            for kernel in os.listdir(f"{self.rootfs_path}/usr/lib/modules")
+            if self.exists(f"/usr/lib/modules/{kernel}/vmlinuz")
+        ]
+
+        if len(kernels) == 0:
+            return
+
         for boot_file in os.listdir(f"{self.rootfs_path}/boot"):
             if not os.path.isdir(boot_file):
                 self.exec("rm", "-f", f"/boot/{boot_file}")
 
-        for kernel in os.listdir(f"{self.rootfs_path}/usr/lib/modules"):
+        for kernel in kernels:
             self.exec(
                 "cp",
                 f"/usr/lib/modules/{kernel}/vmlinuz",

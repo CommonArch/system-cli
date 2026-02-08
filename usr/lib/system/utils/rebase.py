@@ -178,6 +178,20 @@ def rebase(image_name) -> None:
         except Exception:
             pass
 
+    if (
+        len(
+            [
+                kernel
+                for kernel in os.listdir(f"{new_rootfs}/boot")
+                if kernel.startswith("vmlinuz")
+            ]
+        )
+        == 0
+    ):
+        output.error("new rootfs contains no kernel")
+        output.error("refusing to proceed with applying update")
+        exit(1)
+
     new_rootfs.exec("cp", "-ax", "/etc", "/usr/etc")
     subprocess.run(["cp", "-ax", str(new_rootfs), "/.update_rootfs"])
 
